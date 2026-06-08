@@ -21,40 +21,43 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const AI_GATEWAY_API_KEY = Deno.env.get("AI_GATEWAY_API_KEY");
+    const AI_GATEWAY_URL = Deno.env.get("AI_GATEWAY_URL");
+
+    if (!AI_GATEWAY_API_KEY) {
+      throw new Error("AI_GATEWAY_API_KEY is not configured");
     }
 
-    const response = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash-image",
-          messages: [
-            {
-              role: "user",
-              content: [
-                {
-                  type: "text",
-                  text: `Apply the following image prompt to this base image. Generate a new image based on the prompt while using the uploaded image as the subject/reference.\n\nPrompt: ${prompt}`,
-                },
-                {
-                  type: "image_url",
-                  image_url: { url: imageBase64 },
-                },
-              ],
-            },
-          ],
-          modalities: ["image", "text"],
-        }),
-      }
-    );
+    if (!AI_GATEWAY_URL) {
+      throw new Error("AI_GATEWAY_URL is not configured");
+    }
+
+    const response = await fetch(AI_GATEWAY_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${AI_GATEWAY_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-image",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: `Apply the following image prompt to this base image. Generate a new image based on the prompt while using the uploaded image as the subject/reference.\n\nPrompt: ${prompt}`,
+              },
+              {
+                type: "image_url",
+                image_url: { url: imageBase64 },
+              },
+            ],
+          },
+        ],
+        modalities: ["image", "text"],
+      }),
+    });
 
     if (!response.ok) {
       if (response.status === 429) {
